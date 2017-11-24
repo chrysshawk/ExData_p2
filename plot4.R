@@ -19,7 +19,32 @@ plot4 <- function() {
      # Identifying Coal combustion-related sources from SCC
      sccCoal <- SCC %>%
           select(SCC, Short.Name) %>%
-          filter(grepl("[Cc]oal", Short.Name))
+          filter(grepl("coal", Short.Name, ignore.case = TRUE))
+     
+     # Merging dataframes to only view coal related data and ordering
+     mCoal <- merge(sccCoal, NEI, by.x = "SCC", by.y = "SCC")
+     mCoal <- mCoal[order(mCoal$year, mCoal$type),]
+     
+     # 1. See amount of measurements as they have developed in a histogram (point vs non-point)
+     # 2. See average as it has developed
+     # 3. See trend in measurements that were done both in year 1999 and year 2008
+     # 4. See lm for all point and non-point measurements in given period
+     
+     # Plotting histogram of number of measurements in given period
+     gMeasurements <- 
+          ggplot(data = mCoal, aes(x = year, fill = type)) +
+          geom_histogram(binwidth = 1) + 
+          theme_classic() +
+          scale_x_continuous(breaks = unique(bEmi$Year)) +
+          labs(title = "(1) Increase in Yearly Coal measurements in US", y = "Emission measurements", x = "Year")
+     
+     gAvgEmission <- 
+          ggplot(data = mCoal, aes(x = year, y = ))
+     
+     
+
+     
+     
      
      # Subsetting NEI based on coal related sources
      emiCoal <- NEI %>%
@@ -44,12 +69,23 @@ plot4 <- function() {
           summarize(Total.Emissions = sum(Emissions),
                     Mean.Emissions = mean(Emissions),
                     count = length(SCC))
-     ggplot(data = emiCoal)
+     ggplot(data = intCoal, aes(x=year, y=Total.Emissions)) + geom_point(color=type)
+     ggplot(data=intCoal, aes(x=year, y=Total.Emissions)) + 
+          geom_point(aes(col = type)) + 
+          geom_line(aes(col=type)) +
+          facet_grid(type ~.)
+     
+     ggplot(data=intCoal, aes(x=year, y=Mean.Emissions)) + 
+          geom_point(aes(col = type)) + 
+          geom_line(aes(col=type)) +
+          facet_grid(type ~.)
           
      
      # Should I use only indicators for the measurements used in all years? (intersect)
      # Should I use means?
      # What about one chart per year; total emission, mean emission, development
+     
+
      
      
           
