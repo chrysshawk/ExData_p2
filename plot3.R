@@ -23,10 +23,6 @@ plot3 <- function() {
           group_by(year, type) %>%
           summarize(Emissions = sum(Emissions))
      names(bEmi) <- make.names(c("Year", "Type", "Emissions"))
-
-     # Creating PNG device
-     #png(file = "plot3.png", width = 480, height = 480, units = "px",
-     #    bg = "white")
      
      # Creating plot results using ggplot2
      plot3 <- ggplot(data = bEmi, aes(x=Year, y=Emissions)) +
