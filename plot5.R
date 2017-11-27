@@ -30,19 +30,19 @@ plot5 <- function() {
      NEI <- readRDS(file = "./data/summarySCC_PM25.rds")
      SCC <- readRDS(file = "./data/Source_Classification_Code.rds")
      
-     # Identifying Motor vehicle (ON-ROAD) measurements in Baltimore (fips 24510)
-     emiOnroad <- NEI %>%
-          select(fips, SCC, Emissions, type, year) %>%
-          filter(fips == "24510" & type == "ON-ROAD")
-     
+     # Identifying Motor vehicle measurements from SCC
      mv <- SCC %>% 
-          select(SCC, Short.Name, Data.Category) %>% 
+          select(SCC, Short.Name, Data.Category) %>%
+          # subsetting based on Onroad data
+          filter(grepl("Onroad", Data.Category, ignore.case = TRUE)) %>%
+          # subsetting based on vehicle short name
           filter(grepl("veh", Short.Name, ignore.case = TRUE))
      
-     sccOnroad <- SCC %>% 
-          select(Data.Category, Short.Name, SCC) %>% 
-          filter(grepl("Onroad", Data.Category, ignore.case = TRUE))
-          
+     # Selecting relevant motor vehicle measurements in Baltimore (fips 24510)
+     emiOnroad <- NEI %>%
+          select(fips, SCC, Emissions, type, year) %>%
+          filter(fips == "24510" & SCC %in% mv$SCC)
+
      # SCC Short.Name informs that the emission in emiOnroad are of 4 categories
      # Categorizing motor vehicle emission types
      emiType1 <- gsub(".........0$", "Total", emiOnroad$SCC)
