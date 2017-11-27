@@ -34,6 +34,14 @@ plot5 <- function() {
      emiOnroad <- NEI %>%
           select(fips, SCC, Emissions, type, year) %>%
           filter(fips == "24510" & type == "ON-ROAD")
+     
+     mv <- SCC %>% 
+          select(SCC, Short.Name, Data.Category) %>% 
+          filter(grepl("veh", Short.Name, ignore.case = TRUE))
+     
+     sccOnroad <- SCC %>% 
+          select(Data.Category, Short.Name, SCC) %>% 
+          filter(grepl("Onroad", Data.Category, ignore.case = TRUE))
           
      # SCC Short.Name informs that the emission in emiOnroad are of 4 categories
      # Categorizing motor vehicle emission types
@@ -48,7 +56,7 @@ plot5 <- function() {
           ggplot(data = emiOnroad, aes(x = year, fill = emiTypes)) +
           geom_histogram(binwidth = 2) +
           theme_light() +
-          scale_x_continuous(breaks = unique(emiOnroad$year)) +
+          scale_x_discrete(limits = unique(emiOnroad$year)) +
           labs(title = "(1) Motor vehicle measurements", 
                y = "# measurements", x = "Year")
      
@@ -73,7 +81,7 @@ plot5 <- function() {
           ggplot(data=emiOnroad, aes(x = year, y = Emissions)) +
           geom_col(aes(fill = emiTypes)) +
           theme_light() +
-          scale_x_continuous(breaks = unique(emiOnroad$year)) +
+          scale_x_discrete(limits = unique(emiOnroad$year)) +
           labs(title = "(3) Total measured onroad emissions", 
                y = "Emissions (tons)", x = "Year")
           

@@ -1,3 +1,4 @@
+# Creating plot to see if total emissions from PM2.5 have decreased from 1999-2008
 plot1 <- function() {
      # Downloading and extracting file data if not already present
      if(!file.exists("./data")){

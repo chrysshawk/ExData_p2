@@ -40,20 +40,11 @@ plot6 <- function() {
      # Plotting measurement counts for period
      gMotorVehicles <- 
           ggplot(data = dEmi, aes(x=year, fill = County)) +
-          geom_bar(position = position_dodge()) +
+          geom_bar(position = position_dodge(), width = 2) +
           theme_light() +
-          scale_x_continuous(breaks = unique(dEmi$year)) +
-          labs(title = "(1) Emission measurement count", 
+          scale_x_discrete(limits = unique(dEmi$year)) +
+          labs(title = "(1) Trend in # measurements", 
                y = "# measurements", x = "Year")
-     
-     # Looking at variability of emissions
-     gVariability <- 
-          ggplot(data=dEmi, aes(x=year, y=Emissions, col = County)) +
-          geom_point() +
-          theme_light() +
-          scale_x_continuous(breaks = unique(dEmi$year)) +
-          labs(title = "(1) Emission measurement variability", 
-               y = "Emissions (tons)", x = "Year")
      
      # Calculating average emissions
      avgEmi <- dEmi %>%
@@ -63,28 +54,31 @@ plot6 <- function() {
      
      # Plotting average emissions in given period
      gAvgEmissions <- 
-          ggplot(data = avgEmi, aes(x = year, y = avgEmission, col = County)) +
-          geom_point() +
+          ggplot(data = avgEmi, aes(x = year, y = avgEmission, fill = County)) +
+          geom_col() +
           geom_smooth(method = "lm", se = FALSE, lty = "dotted") +
+          scale_x_discrete(limits = unique(avgEmi$year)) +
           theme_light() +
-          #coord_cartesian(ylim = 0:3) +
-          labs(title = "(2) Variability in mean emissions",
+          facet_grid(County~., scales = "free_y") + 
+          labs(title = "(2) Differences in average emissions",
                y = "Mean emissions (tons)",
                x = "Year")
-     
-     gTotalEmissions <-
-          ggplot(data=emiOnroad, aes(x = year, y = Emissions)) +
-          geom_col(aes(fill = emiTypes)) +
-          theme_light() +
-          scale_x_continuous(breaks = unique(emiOnroad$year)) +
-          labs(title = "(3) Total measured onroad emissions", 
-               y = "Emissions (tons)", x = "Year")
-          
 
-     gPlots <- ggarrange(gMotorVehicles, gAvgEmissions, gTotalEmissions,
+     # Looking at variability of emissions
+     gVariabilityLog <- 
+          ggplot(data=dEmi, aes(x=County, y=Emissions, fill = County)) +
+          theme_light() +
+          geom_boxplot() +
+          theme(axis.text.x = element_blank()) +
+          facet_grid(.~year) +
+          scale_y_log10() +
+          labs(title = "(3) Emission measurement variation trend", 
+               y = "Log10 Emissions (tons)", x = "County")
+
+     gPlots <- ggarrange(gMotorVehicles, gAvgEmissions, gVariabilityLog,
                          ncol = 2, nrow = 2)
      
-     ggsave('plot6.png', plot = gPlots, width = 10, height = 7)
+     ggsave('plot6.png', plot = gPlots, width = 7, height = 10)
 
      message("Success! Plot saved as plot6.png to working directory.")
      

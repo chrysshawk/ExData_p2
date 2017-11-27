@@ -1,3 +1,5 @@
+# Creating a plot to see, across US, how emissions from coal combustion
+# related sources have changed 1999-2008
 plot4 <- function() {
      
      # Checking for and installing/initializing required packages
@@ -32,9 +34,10 @@ plot4 <- function() {
      # Identifying Coal combustion-related sources from SCC
      sccCoal <- SCC %>%
           select(SCC, Short.Name) %>%
-          filter(grepl("coal", Short.Name, ignore.case = TRUE))
+          filter(grepl("coal", Short.Name, ignore.case = TRUE)) %>% #filtering out coal
+          filter(grepl("comb", Short.Name, ignore.case = TRUE)) # filtering out combustion
      
-     # Merging dataframes to only view coal related data and ordering
+     # Merging dataframes to only view coal related data, & sorting df
      mCoal <- merge(sccCoal, NEI, by.x = "SCC", by.y = "SCC")
      mCoal <- mCoal[order(mCoal$year, mCoal$type),]
      
@@ -44,7 +47,7 @@ plot4 <- function() {
           geom_histogram(binwidth = 1) + 
           theme_light() +
           scale_x_continuous(breaks = unique(mCoal$year)) +
-          labs(title = "(1) Increasing number of US coal measurements", y = "Emission measurements", x = "Year")
+          labs(title = "(1) Increasing # US coal measurements", y = "Emission measurements", x = "Year")
      
      # See how average emissions have developed
      avgCoal <- mCoal %>%
@@ -62,10 +65,21 @@ plot4 <- function() {
           labs(title = "(2) Decreasing average emissions",
                y = "Average emissions per point",
                x = "Year")
-
-     gPlots <- ggarrange(gMeasurements, gAvgEmission, ncol = 1, nrow = 2)
      
-     ggsave('plot4.png', plot = gPlots, width = 7, height = 7)
+     # Plotting total emissions in given period
+     gSumEmissions <- 
+          ggplot(data = mCoal, aes(x = year, y = Emissions)) +
+          stat_summary(fun.y = sum, geom="bar", aes(fill = type), 
+                       position = position_stack()) +
+          theme_light() +
+          scale_x_discrete(limits = unique(mCoal$year)) +
+          labs(title = "(3) Decreasing total emissions",
+               y = "Emissions (tons)",
+               x = "Year")
+
+     gPlots <- ggarrange(gMeasurements, gAvgEmission, gSumEmissions, ncol = 2, nrow = 2)
+     
+     ggsave('plot4.png', plot = gPlots, width = 10, height = 7)
 
      message("Success! Plot saved as plot4.png to working directory.")
      

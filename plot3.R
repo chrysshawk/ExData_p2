@@ -1,3 +1,6 @@
+# Creating plot to see, of the four types of emissions sources, which have seen decreases
+# in emissions 1999-2008 for Baltimore City, and which have seen increases
+# Using ggplot2
 plot3 <- function() {
      library(ggplot2)
      library(dplyr)

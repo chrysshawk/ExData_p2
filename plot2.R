@@ -1,3 +1,5 @@
+# Creating plot to determine if emissions have decresed in the Baltimore City,
+# Maryland (fips 24510) from 1999-2008
 plot2 <- function() {
      # Downloading and extracting file data if not already present
      if(!file.exists("./data")){
@@ -19,7 +21,6 @@ plot2 <- function() {
      
      # Calculating yearly emissions
      yEmissions <- with(bEmissions, tapply(Emissions, year, sum))
-     
      
      # Creating PNG device
      png(file = "plot2.png", width = 480, height = 480, units = "px",
