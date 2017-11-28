@@ -1,3 +1,6 @@
+# Comparing emissions from motor vehicle sources in Baltimore City with 
+# emissions from motor vehicle sources in Los Angeles County, California (fips == 06037). 
+# Plotting which city has seen greater changes over time in motor vehicle emissions
 plot6 <- function() {
      
      # Checking for and installing/initializing required packages
@@ -29,7 +32,7 @@ plot6 <- function() {
      NEI <- readRDS(file = "./data/summarySCC_PM25.rds")
      SCC <- readRDS(file = "./data/Source_Classification_Code.rds")
      
-     # Identifying Motor vehicle (ON-ROAD) in Baltimore (24510) and LAC (06037)
+     # Identifying Onroad measurements in Baltimore (24510) and LAC (06037)
      dEmi <- NEI %>%
           select(fips, SCC, Emissions, type, year) %>%
           filter(fips %in% c("24510", "06037") & type == "ON-ROAD") %>%
@@ -37,16 +40,25 @@ plot6 <- function() {
                                  yes = "Baltimore",
                                  no = "Los Angeles County"))
      
-     # Plotting measurement counts for period
-     gMotorVehicles <- 
-          ggplot(data = dEmi, aes(x=year, fill = County)) +
-          geom_bar(position = position_dodge(), width = 2) +
-          theme_light() +
-          scale_x_discrete(limits = unique(dEmi$year)) +
-          labs(title = "(1) Trend in # measurements", 
-               y = "# measurements", x = "Year")
+     # Calculating and plotting change in total emissions per County
+     dSum <- dEmi %>% 
+          select(County, Emissions, year) %>% 
+          group_by(year, County) %>% 
+          summarize(Emissions = sum(Emissions))
      
-     # Calculating average emissions
+     gTotalEmissions <- 
+          ggplot(data = dSum, aes(x=year, y=Emissions, fill=County)) +
+          theme_light() + 
+          theme(legend.position="none") +
+          geom_col(width = 2) +
+          geom_text(aes(label = round(Emissions, 0)), vjust = 2, 
+                    size = 4) +
+          facet_grid(County ~., scales = "free_y") + 
+          scale_x_discrete(limits = unique(dEmi$year)) +
+          labs(title = "(1) Change in measured MV emissions", 
+               y = "PM2.5 emission (tons)", x = "Year")
+     
+     # Calculating and plotting change in average emissions
      avgEmi <- dEmi %>%
           select(year, County, Emissions) %>%
           group_by(year, County) %>%
@@ -54,31 +66,33 @@ plot6 <- function() {
      
      # Plotting average emissions in given period
      gAvgEmissions <- 
-          ggplot(data = avgEmi, aes(x = year, y = avgEmission, fill = County)) +
-          geom_col() +
+          ggplot(data = avgEmi, 
+                 aes(x = year, y = avgEmission, fill = County)) +
+          geom_col(width = 2) +
           geom_smooth(method = "lm", se = FALSE, lty = "dotted") +
           scale_x_discrete(limits = unique(avgEmi$year)) +
           theme_light() +
+          theme(legend.position = "none") +
           facet_grid(County~., scales = "free_y") + 
-          labs(title = "(2) Differences in average emissions",
-               y = "Mean emissions (tons)",
+          labs(title = "(2) Changes in average emissions",
+               y = "PM2.5 Avg emissions (tons)",
                x = "Year")
-
-     # Looking at variability of emissions
-     gVariabilityLog <- 
-          ggplot(data=dEmi, aes(x=County, y=Emissions, fill = County)) +
-          theme_light() +
-          geom_boxplot() +
-          theme(axis.text.x = element_blank()) +
-          facet_grid(.~year) +
-          scale_y_log10() +
-          labs(title = "(3) Emission measurement variation trend", 
-               y = "Log10 Emissions (tons)", x = "County")
-
-     gPlots <- ggarrange(gMotorVehicles, gAvgEmissions, gVariabilityLog,
-                         ncol = 2, nrow = 2)
      
-     ggsave('plot6.png', plot = gPlots, width = 7, height = 10)
+     # Plotting measurement counts for period
+     gMotorVehicles <- 
+          ggplot(data = dEmi, aes(x=year, fill = County)) +
+          geom_bar(position = position_dodge(), width = 2) +
+          theme_light() +
+          theme(legend.position = "none") +
+          facet_grid(.~County) +
+          scale_x_discrete(limits = unique(dEmi$year)) +
+          labs(title = "(3) Changes in # measurements", 
+               y = "# measurements", x = "Year")
+
+     gPlots <- ggarrange(gTotalEmissions, gAvgEmissions, gMotorVehicles,
+                         ncol = 1, nrow = 3)
+     
+     ggsave('plot6.png', plot = gPlots, width = 4, height = 10)
 
      message("Success! Plot saved as plot6.png to working directory.")
      

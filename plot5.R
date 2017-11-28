@@ -1,4 +1,4 @@
-#How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
+#How have emissions from motor vehicle sources changed from 1999 to 2008 in Baltimore City?
 plot5 <- function() {
      
      # Checking for and installing/initializing required packages
@@ -33,9 +33,8 @@ plot5 <- function() {
      # Identifying Motor vehicle measurements from SCC
      mv <- SCC %>% 
           select(SCC, Short.Name, Data.Category) %>%
-          # subsetting based on Onroad data
+          # subsetting based on Onroad data AND vehicle short name
           filter(grepl("Onroad", Data.Category, ignore.case = TRUE)) %>%
-          # subsetting based on vehicle short name
           filter(grepl("veh", Short.Name, ignore.case = TRUE))
      
      # Selecting relevant motor vehicle measurements in Baltimore (fips 24510)
@@ -45,16 +44,16 @@ plot5 <- function() {
 
      # SCC Short.Name informs that the emission in emiOnroad are of 4 categories
      # Categorizing motor vehicle emission types
-     emiType1 <- gsub(".........0$", "Total", emiOnroad$SCC)
+     emiType1 <- gsub(".........0$", "All", emiOnroad$SCC)
      emiType2 <- gsub(".........B$", "Brakes", emiType1)
      emiType3 <- gsub(".........T$", "Transmission", emiType2)
-     emiTypes <- gsub(".........X$", "Exhaust", emiType3)
-     emiOnroad <- cbind(emiOnroad, emiTypes)
+     Measurements <- gsub(".........X$", "Exhaust", emiType3)
+     emiOnroad <- cbind(emiOnroad, Measurements)
      
      # Plotting distribution of emission measurements
      gMotorVehicles <- 
-          ggplot(data = emiOnroad, aes(x = year, fill = emiTypes)) +
-          geom_histogram(binwidth = 2) +
+          ggplot(data = emiOnroad, aes(x = year, fill = Measurements)) +
+          geom_bar(width = 2) +
           theme_light() +
           scale_x_discrete(limits = unique(emiOnroad$year)) +
           labs(title = "(1) Motor vehicle measurements", 
@@ -62,28 +61,29 @@ plot5 <- function() {
      
      # Calculating average emissions
      avgOnroad <- emiOnroad %>%
-          select(year, emiTypes, Emissions) %>%
+          select(year, Measurements, Emissions) %>%
           group_by(year) %>%
           summarize(avgEmission = mean(Emissions))
      
      # Plotting average emissions in given period
      gAvgEmissions <- 
           ggplot(data = avgOnroad, aes(x = year, y = avgEmission)) +
-          geom_point() +
+          geom_point(shape = 18, size = 3) +
+          geom_text(aes(label = round(avgEmission, 2)), vjust = 2, size = 3) +
           geom_smooth(method = "lm", se = FALSE, lty = "dotted") +
           theme_light() +
-          coord_cartesian(ylim = 0:3) +
+          coord_cartesian(ylim = 0:2) +
           labs(title = "(2) Decreasing mean emissions",
                y = "Mean emissions (tons)",
                x = "Year")
      
      gTotalEmissions <-
           ggplot(data=emiOnroad, aes(x = year, y = Emissions)) +
-          geom_col(aes(fill = emiTypes)) +
+          geom_col(aes(fill = Measurements), width = 2) +
           theme_light() +
           scale_x_discrete(limits = unique(emiOnroad$year)) +
           labs(title = "(3) Total measured onroad emissions", 
-               y = "Emissions (tons)", x = "Year")
+               y = "PM2.5 Emissions (tons)", x = "Year")
           
 
      gPlots <- ggarrange(gMotorVehicles, gAvgEmissions, gTotalEmissions,
